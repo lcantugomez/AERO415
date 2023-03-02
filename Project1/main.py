@@ -12,8 +12,8 @@ yp_upper = lambda x: np.piecewise(x,[x<=2,(x>2)*(x<3),x>=3],[lambda t:0, lambda 
 x_left = 0
 x_right = 5
 
-i_max = 100
-j_max = 20
+i_max = 15
+j_max = 3
 
 d_exi = 1/i_max
 d_eta = 1/j_max
@@ -21,6 +21,9 @@ d_eta = 1/j_max
 
 
 x_pts,y_pts = create_alg_grid(i_max,j_max,x_left,x_right,y_lower,y_upper)
+
+print("X_Pts\n",x_pts,'\n')
+print("Y_Pts\n",y_pts,'\n')
 
 params = {"i_max":i_max,"j_max":j_max,
          "x_left":x_left,"x_right":x_right,
@@ -33,6 +36,7 @@ params = {"i_max":i_max,"j_max":j_max,
 grid_gen = PDE_Grid(params)
 
 grid_gen.coeff_calc()
+print("Beta\n",grid_gen.beta_mat)
 nx_pts,ny_pts = grid_gen.pde_grid(10**-7)
 
 x_arr = []
