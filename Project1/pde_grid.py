@@ -1,49 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class PDE_Grid():
 
     # Init class with set of parameters
     def __init__(self,params) -> None:      
         for kw,arg in params.items():
             setattr(PDE_Grid,kw,arg)
-    
-
-
-    def create_alg_grid(i_max,j_max,xL,xR,yL,yU):
-
-        # Generate exi and eta arr
-        exi_arr = []
-        eta_arr = []
-
-        for i in range(0,i_max+1):
-            exi_arr.append(i/i_max)
-        
-        for j in range(0,j_max+1):
-            eta_arr.append(j/j_max)
-
-        x_mat = np.zeros((i_max+1,j_max+1))
-        y_mat = np.zeros((i_max+1,j_max+1))
-
-        # Generate x and y points using bounds
-        for j in range(len(eta_arr)):
-            for i in range(len(exi_arr)):
-                x = (xL + (exi_arr[i]*(xR-xL)))
-                y = yL(x) + (eta_arr[j]*(yU(x) - yL(x)))
-                x_mat[i,j] = x
-                y_mat[i,j] = y
-        
-
-        return x_mat, y_mat
 
 
     def coeff_calc(self):
 
         i_max = self.i_max
         j_max = self.j_max      # Init variables to use in function (is in this format due to legacy code)
-        x_mat = self.x_mat
-        y_mat = self.y_mat
+        nx_mat = self.x_mat
+        ny_mat = self.y_mat
         d_exi = self.d_exi
         d_eta = self.d_eta
 
@@ -60,9 +31,9 @@ class PDE_Grid():
 
                 # Calc the alpha beta and gamma vals
                 
-                alpha  = (1/(4*(d_eta**2))) * ( ((x_mat[i,j+1] - x_mat[i,j-1])**2) + ((y_mat[i,j+1] - y_mat[i,j-1])**2) )
-                beta = (1/(4*(d_eta*d_exi))) * ( ((x_mat[i+1,j] - x_mat[i-1,j]) * (x_mat[i,j+1] - x_mat[i,j-1])) + ((y_mat[i+1,j] - y_mat[i-1,j]) * (y_mat[i,j+1] - y_mat[i,j-1])) )
-                gamma = (1/(4*(d_exi**2))) * ( ((x_mat[i+1,j] - x_mat[i-1,j])**2) + ((y_mat[i+1,j] - y_mat[i-1,j])**2) )
+                alpha  = (1/(4*(d_eta**2))) * ( ((nx_mat[i,j+1] - nx_mat[i,j-1])**2) + ((ny_mat[i,j+1] - ny_mat[i,j-1])**2) )
+                beta = (1/(4*(d_eta*d_exi))) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j]) * (nx_mat[i,j+1] - nx_mat[i,j-1])) + ((ny_mat[i+1,j] - ny_mat[i-1,j]) * (ny_mat[i,j+1] - ny_mat[i,j-1])) )
+                gamma = (1/(4*(d_exi**2))) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j])**2) + ((ny_mat[i+1,j] - ny_mat[i-1,j])**2) )
 
 
 
@@ -82,19 +53,21 @@ class PDE_Grid():
 
     def pde_grid(self,tol):
 
+        self.coeff_calc()
+        
+
         i_max = self.i_max
         j_max = self.j_max              # Init variables to use in function (is in this format due to legacy code)
-        x_mat = self.x_mat
-        y_mat = self.y_mat
+        nx_mat = self.x_mat
+        ny_mat = self.y_mat
         d_exi = self.d_exi
         d_eta = self.d_eta
 
-        
         diff = 1
         while diff >= tol:
             diff += -1
-            for j in range(0,j_max+1):
-                for i in range(0,i_max+1):
+            for i in range(0,i_max+1):
+                for j in range(0,j_max+1):
 
                     if i == 0:
                         if j == 0:
@@ -102,45 +75,47 @@ class PDE_Grid():
                         elif j == j_max:
                             pass            # Top left corner
                         else:
-                            x_mat[i,j] = x_mat[i+2,j]          # Left wall
-                            y_mat[i,j] = y_mat[i+2,j]
+                            ny_mat[i,j] = ny_mat[i+2,j]   # Left wall
 
                     elif i == i_max:
                         if j == 0:
                             pass            # Bottom right corner
                         elif j == j_max:
                             pass            # Top right corner
-                        else:
-                            x_mat[i,j] = x_mat[i-2,j]       # Right wall
-                            y_mat[i,j] = y_mat[i-2,j]
+                        else:       
+                            ny_mat[i,j] = ny_mat[i-2,j]       # Right wall
                     
                     elif j == 0:
-                        x_mat[i,j] = x_mat[i,j+2] * (2 * d_eta * self.__class__.yp_lower(x_mat[i,j]))     # On the bottom curve
-                        y_mat[i,j] = self.__class__.y_lower(x_mat[i,j])
+                        nx_mat[i,j] = nx_mat[i,j+2] + (2 * d_eta * self.__class__.yp_lower(nx_mat[i,j]))     # On the bottom curve
+                        ny_mat[i,j] = self.__class__.y_lower(nx_mat[i,j])
                         
                     elif j == j_max:
-                        x_mat[i,j] = x_mat[i,j-2] * (2 * d_eta * self.__class__.yp_upper(x_mat[i,j]))     # On the upper curve
-                        y_mat[i,j] = self.__class__.y_upper(x_mat[i,j])
+                        nx_mat[i,j] = nx_mat[i,j-2] + (2 * d_eta * self.__class__.yp_upper(nx_mat[i,j]))     # On the upper curve
+                        ny_mat[i,j] = self.__class__.y_upper(nx_mat[i,j])
                         
                     else:
                         
-                        phi = (2*self.alpha_mat[i,j]/(self.d_exi**2)) + (2*self.gamma_mat[i,j]/(self.d_eta**2))
+                        nu = self.alpha_mat[i,j]/(d_exi**2)             # Where nu is alpha/(delta_exi^2)
+                        theta = -self.beta_mat[i,j]/(2*d_exi*d_eta)     # Where theta is -beta/(2*delta_exi*delta_eta)
+                        lam = self.gamma_mat[i,j]/(d_eta**2)            # Where lambda is gamma/(delta_eta^2)
+                        phi = 2*(nu + lam)                              # Where phi is the coefficient of x_ij
 
-                        a1 = -(self.beta_mat[i,j]/(2*self.d_exi*self.d_eta)) / phi
-                        a2 = -(self.gamma_mat[i,j]/(2*self.d_eta**2)) / phi
+
+                        a1 = theta/phi
+                        a2 = lam/phi
                         a3 = -a1
-                        a4 = -(self.alpha_mat[i,j]/(2*self.d_exi**2)) / phi
+                        a4 = nu/phi
                         a5 = a4
                         a6 = a3
                         a7 = a2
                         a8 = a1
+                        
+                        nx_mat[i,j] = a1*nx_mat[i-1,j-1] + a2*nx_mat[i,j-1] + a3*nx_mat[i+1,j-1] + a4*nx_mat[i-1,j] + a5*nx_mat[i+1,j] + a6*nx_mat[i-1,j+1] + a7*nx_mat[i,j+1] + a8*nx_mat[i+1,j+1]
 
-                        x_mat[i,j] = a1*x_mat[i-1,j] + a2*x_mat[i,j-1] + a3*x_mat[i+1,j-1] + a4*x_mat[i-1,j] + a5*x_mat[i+1,j] + a6*x_mat[i-1,j+1] + a7*x_mat[i,j+1] + a8*x_mat[i+1,j+1]
-
-                        y_mat[i,j] = a1*y_mat[i-1,j] + a2*y_mat[i,j-1] + a3*y_mat[i+1,j-1] + a4*y_mat[i-1,j] + a5*y_mat[i+1,j] + a6*y_mat[i-1,j+1] + a7*y_mat[i,j+1] + a8*y_mat[i+1,j+1]
-
-            self.x_mat = x_mat
-            self.y_mat = y_mat
+                        ny_mat[i,j] = a1*ny_mat[i-1,j-1] + a2*ny_mat[i,j-1] + a3*ny_mat[i+1,j-1] + a4*ny_mat[i-1,j] + a5*ny_mat[i+1,j] + a6*ny_mat[i-1,j+1] + a7*ny_mat[i,j+1] + a8*ny_mat[i+1,j+1]
+            
+            self.x_mat = nx_mat
+            self.y_mat = ny_mat
             self.coeff_calc()
 
-        return x_mat,y_mat
+        return nx_mat,ny_mat
