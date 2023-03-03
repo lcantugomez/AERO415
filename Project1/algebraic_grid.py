@@ -23,13 +23,8 @@ def create_alg_grid(i_max,j_max,xL,xR,yL,yU):
         for i in range(len(exi_arr)):
             x = (xL + (exi_arr[i]*(xR-xL)))
             y = yL(x) + (eta_arr[j]*(yU(x) - yL(x)))
-            """if x  ==  2:
-                x -= d_exi
-            elif x == 3:
-                x += d_exi"""
             x_mat[i,j] = x
             y_mat[i,j] = y
     
 
     return x_mat, y_mat
-

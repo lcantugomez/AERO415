@@ -65,7 +65,8 @@ class PDE_Grid():
 
         diff = 1
         while diff >= tol:
-            diff += -0.1
+            diff += -0.01
+            print(diff)
             for j in range(0,j_max):
                 for i in range(0,i_max):
 
@@ -90,7 +91,7 @@ class PDE_Grid():
                         ny_mat[i,j] = self.__class__.y_lower(nx_mat[i,j])
                         
                     elif j == j_max-1:
-                        nx_mat[i,j] = nx_mat[i,j-2] + (2 * d_eta * self.__class__.yp_upper(nx_mat[i,j]))     # On the upper curve
+                        nx_mat[i,j] = nx_mat[i,j-2] - (2 * d_eta * self.__class__.yp_upper(nx_mat[i,j]))     # On the upper curve
                         ny_mat[i,j] = self.__class__.y_upper(nx_mat[i,j])
                         
                     else:
@@ -118,15 +119,4 @@ class PDE_Grid():
             self.y_mat = ny_mat
             self.coeff_calc()
             
-            x_arr = []
-            y_arr = []
-
-            """for i in range(0,i_max + 1):
-                for j in range(0, j_max + 1):
-                    x_arr.append(nx_mat[i,j])
-                    y_arr.append(ny_mat[i,j])
-
-            plt.scatter(x_arr,y_arr)
-            plt.show()"""
-
         return nx_mat,ny_mat
