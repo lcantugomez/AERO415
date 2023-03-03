@@ -12,8 +12,8 @@ yp_upper = lambda x: np.piecewise(x,[x<=2,(x>2)*(x<3),x>=3],[lambda t:0, lambda 
 x_left = 0
 x_right = 5
 
-i_max = 100
-j_max = 20
+i_max = 99
+j_max = 19
 
 d_exi = 1/(i_max-1)
 d_eta = 1/(j_max-1)
@@ -51,10 +51,10 @@ nx_pts,ny_pts = grid_gen.pde_grid(10**-7)
 x_arr = []
 y_arr = []
 
-for i in range(0,i_max):
-    for j in range(0, j_max):
+for j in range(0,j_max):
+    for i in range(0, i_max):
         x_arr.append(nx_pts[i,j])
         y_arr.append(ny_pts[i,j])
 
-plt.scatter(x_arr,y_arr,s=5)
+plt.scatter(x_arr,y_arr,zorder=2,s=5)
 plt.show()

@@ -65,9 +65,10 @@ class PDE_Grid():
 
         diff = 1
         while diff >= tol:
-            diff += -0.1
-            for j in range(0,j_max):
-                for i in range(0,i_max):
+            diff += -0.01
+            print(diff)
+            for j in range(j_max-1,-1,-1):
+                for i in range(i_max-1,-1,-1):
 
                     if i == 0:
                         if j == 0:
