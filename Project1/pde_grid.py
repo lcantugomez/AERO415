@@ -20,12 +20,12 @@ class PDE_Grid():
 
         # Initialize alpha, beta, gamma arrays
 
-        alpha_mat = np.zeros((i_max+1,j_max+1))
-        beta_mat = np.zeros((i_max+1,j_max+1))
-        gamma_mat = np.zeros((i_max+1,j_max+1))
+        alpha_mat = np.zeros((i_max,j_max))
+        beta_mat = np.zeros((i_max,j_max))
+        gamma_mat = np.zeros((i_max,j_max))
 
-        for j in range(1,j_max):            # Loop only through the interior nodes
-            for i in range(1,i_max):
+        for j in range(1,j_max-1):            # Loop only through the interior nodes
+            for i in range(1,i_max-1):
                     
                 
 
@@ -65,19 +65,19 @@ class PDE_Grid():
 
         diff = 1
         while diff >= tol:
-            diff += -1
-            for i in range(0,i_max+1):
-                for j in range(0,j_max+1):
+            diff += -0.1
+            for j in range(0,j_max):
+                for i in range(0,i_max):
 
                     if i == 0:
                         if j == 0:
                             pass            # Bottom left corner
-                        elif j == j_max:
+                        elif j == j_max-1:
                             pass            # Top left corner
                         else:
                             ny_mat[i,j] = ny_mat[i+2,j]   # Left wall
 
-                    elif i == i_max:
+                    elif i == i_max-1:
                         if j == 0:
                             pass            # Bottom right corner
                         elif j == j_max:
@@ -89,7 +89,7 @@ class PDE_Grid():
                         nx_mat[i,j] = nx_mat[i,j+2] + (2 * d_eta * self.__class__.yp_lower(nx_mat[i,j]))     # On the bottom curve
                         ny_mat[i,j] = self.__class__.y_lower(nx_mat[i,j])
                         
-                    elif j == j_max:
+                    elif j == j_max-1:
                         nx_mat[i,j] = nx_mat[i,j-2] + (2 * d_eta * self.__class__.yp_upper(nx_mat[i,j]))     # On the upper curve
                         ny_mat[i,j] = self.__class__.y_upper(nx_mat[i,j])
                         
@@ -117,5 +117,16 @@ class PDE_Grid():
             self.x_mat = nx_mat
             self.y_mat = ny_mat
             self.coeff_calc()
+            
+            x_arr = []
+            y_arr = []
+
+            """for i in range(0,i_max + 1):
+                for j in range(0, j_max + 1):
+                    x_arr.append(nx_mat[i,j])
+                    y_arr.append(ny_mat[i,j])
+
+            plt.scatter(x_arr,y_arr)
+            plt.show()"""
 
         return nx_mat,ny_mat

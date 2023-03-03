@@ -15,19 +15,20 @@ x_right = 5
 i_max = 100
 j_max = 20
 
-d_exi = 1/i_max
-d_eta = 1/j_max
+d_exi = 1/(i_max-1)
+d_eta = 1/(j_max-1)
 
 
 
 x_pts,y_pts = create_alg_grid(i_max,j_max,x_left,x_right,y_lower,y_upper)
 
+print(x_pts)
 
 x_arr = []
 y_arr = []
 
-for i in range(0,i_max + 1):
-    for j in range(0, j_max + 1):
+for i in range(0,i_max):
+    for j in range(0, j_max):
         x_arr.append(x_pts[i,j])
         y_arr.append(y_pts[i,j])
 
@@ -50,10 +51,10 @@ nx_pts,ny_pts = grid_gen.pde_grid(10**-7)
 x_arr = []
 y_arr = []
 
-for i in range(0,i_max + 1):
-    for j in range(0, j_max + 1):
+for i in range(0,i_max):
+    for j in range(0, j_max):
         x_arr.append(nx_pts[i,j])
         y_arr.append(ny_pts[i,j])
 
-plt.scatter(x_arr,y_arr)
+plt.scatter(x_arr,y_arr,s=5)
 plt.show()
