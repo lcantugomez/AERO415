@@ -13,8 +13,8 @@ yp_upper = lambda x: np.piecewise(x,[x<=2,(x>2)*(x<3),x>=3],[lambda t:0, lambda 
 x_left = 0
 x_right = 5
 
-i_max = 100
-j_max = 20
+i_max = 99
+j_max = 19
 
 d_exi = 1/(i_max-1)
 d_eta = 1/(j_max-1)
