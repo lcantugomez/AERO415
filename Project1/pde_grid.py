@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from plotting_func import plot_grid
+import imageio.v2 as imageio
+import os
 
 class PDE_Grid():
 
@@ -31,9 +34,9 @@ class PDE_Grid():
 
                 # Calc the alpha beta and gamma vals
                 
-                alpha  = (1/(4*(d_eta**2))) * ( ((nx_mat[i,j+1] - nx_mat[i,j-1])**2) + ((ny_mat[i,j+1] - ny_mat[i,j-1])**2) )
-                beta = (1/(4*(d_eta*d_exi))) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j]) * (nx_mat[i,j+1] - nx_mat[i,j-1])) + ((ny_mat[i+1,j] - ny_mat[i-1,j]) * (ny_mat[i,j+1] - ny_mat[i,j-1])) )
-                gamma = (1/(4*(d_exi**2))) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j])**2) + ((ny_mat[i+1,j] - ny_mat[i-1,j])**2) )
+                alpha  = ((1/4)*((j_max-1)**2)) * ( ((nx_mat[i,j+1] - nx_mat[i,j-1])**2) + ((ny_mat[i,j+1] - ny_mat[i,j-1])**2) )
+                beta = ((1/4)*((j_max-1)*(i_max-1))) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j]) * (nx_mat[i,j+1] - nx_mat[i,j-1])) + ((ny_mat[i+1,j] - ny_mat[i-1,j]) * (ny_mat[i,j+1] - ny_mat[i,j-1])) )
+                gamma = ((1/4)*((i_max-1)**2)) * ( ((nx_mat[i+1,j] - nx_mat[i-1,j])**2) + ((ny_mat[i+1,j] - ny_mat[i-1,j])**2) )
 
 
 
@@ -44,40 +47,44 @@ class PDE_Grid():
                 gamma_mat[i,j] = gamma
 
         # Init mats into class
-
         self.alpha_mat = alpha_mat
         self.beta_mat = beta_mat
         self.gamma_mat = gamma_mat
 
 
 
-    def pde_grid(self,tol):
+    def pde_grid(self,tol,gif_bool=False):
 
-        
+        if gif_bool:
+            writer = imageio.get_writer('mygif.gif', mode='I')
+
 
         i_max = self.i_max
         j_max = self.j_max              # Init variables to use in function (is in this format due to legacy code)
         nx_mat = self.x_mat
         ny_mat = self.y_mat
-        d_exi = self.d_exi
         d_eta = self.d_eta
 
-        i_index_diff = int((2/5)*i_max)
+        fig_count = 0
 
-        j_index_diff = int((0.3/1)*j_max)
+        prev_x = np.zeros(nx_mat.shape)
+        prev_y = np.zeros(ny_mat.shape)
+        for j in range(0,j_max):
+            for i in range(0,i_max):
+                prev_x[i,j] = nx_mat[i,j]
+                prev_y[i,j] = ny_mat[i,j]
+            
+        
 
-        prev_x = nx_mat[i_index_diff,j_index_diff]
-        prev_y = ny_mat[i_index_diff,j_index_diff]
-        diff_y = 1
+
         diff_x = 1
-
-
-        diff = 1
-        while diff >= tol:
+        diff_y = 1
+        while diff_x >= tol or diff_y >= tol:
+            
+            fig_count += 1
 
             # Calculate alpha,beta,gamma
             self.coeff_calc()
-            diff += -0.005
             for j in range(0,j_max):
                 for i in range(0,i_max):
 
@@ -87,7 +94,7 @@ class PDE_Grid():
                         elif j == j_max-1:
                             pass            # Top left corner
                         else:
-                            ny_mat[i,j] = ny_mat[i+1,j]   # Left wall
+                            ny_mat[i,j] = ny_mat[i+2,j]   # Left wall
 
                     elif i == i_max-1:
                         if j == 0:
@@ -95,22 +102,22 @@ class PDE_Grid():
                         elif j == j_max:
                             pass            # Top right corner
                         else:       
-                            ny_mat[i,j] = ny_mat[i-1,j]       # Right wall
+                            ny_mat[i,j] = ny_mat[i-2,j]       # Right wall
                     
                     elif j == 0:
-                        nx_mat[i,j] = nx_mat[i,j+1] + (d_eta * self.__class__.yp_lower(nx_mat[i,j]))     # On the bottom curve
+                        nx_mat[i,j] = nx_mat[i,j+2] + (2*d_eta * self.__class__.yp_lower(nx_mat[i,j+2]))     # On the bottom curve
                         ny_mat[i,j] = self.__class__.y_lower(nx_mat[i,j])
                         
                     elif j == j_max-1:
-                        nx_mat[i,j] = nx_mat[i,j-1] - (d_eta * self.__class__.yp_upper(nx_mat[i,j]))     # On the upper curve
+                        nx_mat[i,j] = nx_mat[i,j-2] - (2*d_eta * self.__class__.yp_upper(nx_mat[i,j-2]))     # On the upper curve
                         ny_mat[i,j] = self.__class__.y_upper(nx_mat[i,j])
                         
                     else:
                         
-                        nu = self.alpha_mat[i,j]/(d_exi**2)             # Where nu is alpha/(delta_exi^2)
-                        theta = -self.beta_mat[i,j]/(2*d_exi*d_eta)     # Where theta is -beta/(2*delta_exi*delta_eta)
-                        lam = self.gamma_mat[i,j]/(d_eta**2)            # Where lambda is gamma/(delta_eta^2)
-                        phi = 2*(nu + lam)                              # Where phi is the coefficient of x_ij
+                        nu = self.alpha_mat[i,j]*((i_max-1)**2)             # Where nu is alpha/(delta_exi^2) (using original definition for floating point error)
+                        theta = -self.beta_mat[i,j]*((j_max-1)*(i_max-1))   # Where theta is -beta/(2*delta_exi*delta_eta) (using original definition for floating point error)
+                        lam = self.gamma_mat[i,j]*((j_max-1)**2)            # Where lambda is gamma/(delta_eta^2) (using original definition for floating point error)
+                        phi = 2*(nu + lam)                                  # Where phi is the coefficient of x_ij 
 
 
                         a1 = theta/phi
@@ -128,13 +135,27 @@ class PDE_Grid():
 
                         ny_mat[i,j] = a1*ny_mat[i-1,j-1] + a2*ny_mat[i,j-1] + a3*ny_mat[i+1,j-1] + a4*ny_mat[i-1,j] + a5*ny_mat[i+1,j] + a6*ny_mat[i-1,j+1] + a7*ny_mat[i,j+1] + a8*ny_mat[i+1,j+1]
             
-            # Update matrices
+
+            diff_x_mat = abs(prev_x - nx_mat)
+            diff_y_mat = abs(prev_y - ny_mat)
+            prev_x = np.zeros(nx_mat.shape)
+            prev_y = np.zeros(ny_mat.shape)
+            diff_x = diff_x_mat.mean()
+            diff_y = diff_y_mat.mean()
+            print(diff_x,diff_y)
+
+            for j in range(0,j_max):
+                for i in range(0,i_max):
+                    prev_x[i,j] = nx_mat[i,j]
+                    prev_y[i,j] = ny_mat[i,j]
             
-            diff_x = (prev_x - nx_mat[i_index_diff,j_index_diff])
-            diff_y = (prev_y - ny_mat[i_index_diff,j_index_diff])
-            prev_x = nx_mat[i_index_diff,j_index_diff]
-            prev_y = ny_mat[i_index_diff,j_index_diff]
-            print(diff_x," ",diff_y)
+
+            # Update Matrices
+            if gif_bool:
+                plot_grid(nx_mat,ny_mat,fig_count,gif_bool)
+                image = imageio.imread(f'Fig{fig_count}.png')
+                writer.append_data(image)
+                os.remove(f'Fig{fig_count}.png')
 
             self.x_mat = nx_mat
             self.y_mat = ny_mat
@@ -166,4 +187,11 @@ class PDE_Grid():
         nx_mat[i_index1,j_max-1] = pt1
         nx_mat[i_index2,j_max-1] = pt2
 
+        if gif_bool:
+            plot_grid(nx_mat,ny_mat,fig_count+1,gif_bool)
+            image = imageio.imread(f'Fig{fig_count+1}.png')
+            writer.append_data(image)
+            os.remove(f'Fig{fig_count+1}.png')
+
+        print(f'Number of iterations: {fig_count} for tolerance = {tol}')
         return nx_mat,ny_mat
