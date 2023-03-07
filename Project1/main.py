@@ -19,14 +19,14 @@ x_left = 0
 x_right = 5
 
 
-i_max = 201
-j_max = 40
+i_max = 51
+j_max = 10
 
 d_exi = 1/(i_max-1)
 d_eta = 1/(j_max-1)
 
 x_pts,y_pts = create_alg_grid(i_max,j_max,x_left,x_right,y_lower,y_upper)
-"""plot_grid(x_pts,y_pts,color="lightgrey")"""
+plot_grid(x_pts,y_pts,color="lightgrey")
 
 params = {"i_max":i_max,"j_max":j_max,
          "x_left":x_left,"x_right":x_right,
@@ -43,6 +43,5 @@ nx_pts,ny_pts = grid_gen.pde_grid(10**-7,False)
 delta_t = time.time() - start_time
 print(delta_t)
 
-"""plot_grid(nx_pts,ny_pts)
+plot_grid(nx_pts,ny_pts)
 plt.show()
-"""

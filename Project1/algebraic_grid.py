@@ -15,6 +15,7 @@ def create_alg_grid(i_max,j_max,xL,xR,yL,yU):
     for j in range(0,j_max):
         eta_arr.append(j/(j_max-1))
 
+    # Create matrices to store x and y values
     x_mat = np.zeros((i_max,j_max))
     y_mat = np.zeros((i_max,j_max))
 
