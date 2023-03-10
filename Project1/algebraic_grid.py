@@ -7,7 +7,6 @@ def create_alg_grid(i_max,j_max,xL,xR,yL,yU):
     # Generate exi and eta arr
     exi_arr = []
     eta_arr = []
-    d_exi = 1/(i_max-1)
 
     for i in range(0,i_max):
         exi_arr.append(i/(i_max-1))

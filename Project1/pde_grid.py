@@ -67,9 +67,10 @@ class PDE_Grid():
         diff_y = 1
         while diff_x >= tol or diff_y >= tol:
             
-            #Updateing figure count per iteration
+            # Updateing figure count per iteration
             fig_count += 1
-
+            if fig_count % 100 == 0:
+                print(f'Running... Iteration = {fig_count}')
             # Calculate alpha,beta,gamma
             self.coeff_calc()
             for j in range(0,self.j_max):
@@ -126,10 +127,9 @@ class PDE_Grid():
             diff_x_mat = abs(prev_x - self.x_mat)
             diff_y_mat = abs(prev_y - self.y_mat)
 
-            # Finding the max difference betweene iterations and replacing the difference variables to continue loop
+            # Finding the max difference between iterations and replacing the difference variables to continue loop
             diff_x = diff_x_mat.max()
             diff_y = diff_y_mat.max()
-            print(diff_x,diff_y)
 
             # Making the previous iteration matrix the current iteration matrix
             prev_x = np.copy(self.x_mat)
@@ -178,4 +178,4 @@ class PDE_Grid():
             os.remove(f'Fig{fig_count+1}.png')
 
         print(f'Number of iterations: {fig_count} for tolerance = {tol}')
-        return self.x_mat,self.y_mat
+        return self.x_mat,self.y_mat,fig_count
