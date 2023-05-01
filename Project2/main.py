@@ -9,7 +9,7 @@ start = time.time()
 # Local imports 
 from struct_2d_euler import Struct2DEulerChannel
 
-with open('grid1.pkl','rb') as file:
+with open('grid3.pkl','rb') as file:
     grid1 = pickle.load(file)
 
 # Inlet conditions

@@ -588,7 +588,7 @@ class Struct2DEulerChannel():
         while diff >= tol:
             count += 1
             print(f'iter {count}')
-            diff -= 0.005
+            diff -= 0.05
 
             self.max_timestep()
             self.init_fluxes()
