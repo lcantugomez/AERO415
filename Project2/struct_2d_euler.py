@@ -7,10 +7,11 @@ import time
 
 # Init solver class
 class Struct2DEulerChannel():
-    def __init__(self,grid,qminf,gamma,inlet_angle = 0) -> None:
+    def __init__(self,grid,qminf,gamma,cfl,inlet_angle = 0) -> None:
         self.grid = grid
         self.qminf = qminf
         self.gamma = gamma
+        self.cfl = cfl
         self.inlet_angle = inlet_angle
         self.grid_shape = grid[0].shape
         self.n_i_max = self.grid_shape[0]
@@ -96,6 +97,7 @@ class Struct2DEulerChannel():
                 p = (self.gamma - 1)*(q3 - (0.5*((q1**2) + (q2**2)/q0)))
                 if p <= 0:
                     print(q3,'\n',q1,q2,q0,'\n',i,j,'\n\n')
+                    raise ValueError
                 self.cell_pressure_mat[i,j] = p
     
     # Init fluxes
@@ -394,14 +396,14 @@ class Struct2DEulerChannel():
     def bcWall(self):
         for i in range(2, self.gc_i_max - 2):
             dom_cell_1_bot = self.ghost_cell_state_vector_mat[i,2]
-            dom_cell_2_bot= self.ghost_cell_state_vector_mat[i,3]
-            ghost_cell_1_bot = self.ghost_cell_state_vector_mat[i,1]
-            ghost_cell_2_bot = self.ghost_cell_state_vector_mat[i,0]
+            dom_cell_2_bot = self.ghost_cell_state_vector_mat[i,3]
+            ghost_cell_1_bot = np.copy(dom_cell_1_bot)
+            ghost_cell_2_bot = np.copy(dom_cell_2_bot)
 
             dom_cell_1_top = self.ghost_cell_state_vector_mat[i,self.gc_j_max - 3]
-            dom_cell_2_top= self.ghost_cell_state_vector_mat[i,self.gc_j_max - 4]
-            ghost_cell_1_top = self.ghost_cell_state_vector_mat[i,self.gc_j_max - 2]
-            ghost_cell_2_top = self.ghost_cell_state_vector_mat[i,self.gc_j_max - 1]
+            dom_cell_2_top = self.ghost_cell_state_vector_mat[i,self.gc_j_max - 4]
+            ghost_cell_1_top = np.copy(dom_cell_1_top)
+            ghost_cell_2_top = np.copy(dom_cell_2_top)
 
             dx1_bot,dy1_bot,ds1_bot = self.length(i,2,'S',with_dx_dy=True)
 
@@ -437,8 +439,8 @@ class Struct2DEulerChannel():
             ghost_cell_2_top[1,0] = u_ghost_top2
             ghost_cell_2_top[2,0] = v_ghost_top2
 
-            self.ghost_cell_state_vector_mat[i,1] = ghost_cell_1_bot
-            self.ghost_cell_state_vector_mat[i,0] = ghost_cell_2_bot
+            self.ghost_cell_state_vector_mat[i,1] = np.copy(ghost_cell_1_bot)
+            self.ghost_cell_state_vector_mat[i,0] = np.copy(ghost_cell_2_bot)
 
             self.ghost_cell_state_vector_mat[i,self.gc_j_max - 2] = np.copy(ghost_cell_1_top)
             self.ghost_cell_state_vector_mat[i,self.gc_j_max - 1] = np.copy(ghost_cell_2_top)
@@ -572,7 +574,7 @@ class Struct2DEulerChannel():
                 denom = (lam1*length1) + (lam2*length2) * (lam3*length3) + (lam4*length4)
                 num =  2*area
                 dt = num/denom
-                dt_mat[i,j] = 0.25*dt
+                dt_mat[i,j] = self.cfl*dt
         
         self.dt_mat = np.copy(dt_mat)
 
@@ -583,12 +585,24 @@ class Struct2DEulerChannel():
         diff = 1
         count = 0
         alphas = [1/4,1/3,1/2,1]
+
+        resid1_list = []
+        resid2_list = []
+        resid3_list = []
+        resid4_list = []
+
         diff_mat = np.ones(shape=self.ghost_cell_state_vector_mat.shape)
         diff_test = diff_mat.min()
         while diff >= tol:
+
+            resid1_mat = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
+            resid2_mat = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
+            resid3_mat = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
+            resid4_mat = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
+
             count += 1
             print(f'iter {count}')
-            diff -= 0.005
+            diff -= 0.0001
 
             self.max_timestep()
             self.init_fluxes()
@@ -596,6 +610,7 @@ class Struct2DEulerChannel():
             self.init_dissipation(nu2,nu4)
             test_mat1 = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
             test_mat2 = np.zeros(shape=self.ghost_cell_state_vector_mat.shape)
+
             qrk_mat = np.copy(self.ghost_cell_state_vector_mat)
             q_new_mat = np.copy(self.ghost_cell_state_vector_mat)
             for alpha in alphas:
@@ -612,6 +627,11 @@ class Struct2DEulerChannel():
                         diff_mat[i,j] = diff_ij
                         test_mat1[i,j] = R_ij[3,0]
                         test_mat2[i,j] = D_ij[3,0]
+                        
+                        resid1_mat[i,j] = R_ij[0,0]
+                        resid2_mat[i,j] = R_ij[1,0]
+                        resid3_mat[i,j] = R_ij[2,0]
+                        resid4_mat[i,j] = R_ij[3,0]
 
                 self.ghost_cell_state_vector_mat = np.copy(q_new_mat)
                 self.bcWall()
@@ -619,10 +639,14 @@ class Struct2DEulerChannel():
                 self.init_fluxes()
                 self.init_residuals()
             
-            diff_test = diff_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean()
+            diff_test = diff_mat[2:self.gc_i_max - 2,2:self.gc_j_max - 2].mean()
             print(diff_test)
+            resid1_list.append(resid1_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
+            resid2_list.append(resid2_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
+            resid3_list.append(resid3_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
+            resid4_list.append(resid4_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
             
-            if count % 25 == 0:
+            if count % 2000 == 0:
                 x = self.grid[0]
                 y = self.grid[1]
                 z = self.cell_pressure_mat[2:self.gc_i_max-2,2:self.gc_j_max-2]
@@ -633,5 +657,10 @@ class Struct2DEulerChannel():
                 plot_grid(x,y,'seismic',z2,title='Residual 3')
                 plot_grid(x,y,'seismic',z3,title='Diss 3')
                 plt.show()
+        
         self.bcWall()
         self.bcInletOutlet()
+        self.resid1_list = resid1_list
+        self.resid2_list = resid2_list
+        self.resid3_list = resid3_list
+        self.resid4_list = resid4_list
