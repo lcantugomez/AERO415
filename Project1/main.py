@@ -7,6 +7,8 @@ import os
 import time
 import pandas as pd
 
+
+
 # Local Imports
 from plotting_func import plot_grid
 from algebraic_grid import create_alg_grid
@@ -15,6 +17,9 @@ from pde_grid import PDE_Grid
 # Init arrays for generating tables and grids
 i_max_arr = [80,100,120,140]
 j_max_arr = [6,8,12,16,20,24,28]
+
+# Init tolerance arrays for table in report
+tol_arr = [10**-4,10**-5,10**-6,10**-7,10**-8,10**-9,10**-10,10**-11,10**-12]
 
 print('Would you like to plot only one grid of custom size?\n')
 print('----------------------------WARNING---------------------------------------')
@@ -25,6 +30,7 @@ selction = input('(y/n): ')
 if selction.upper() == 'Y':
     i_max_arr = [int(input('I Max = '))]
     j_max_arr = [int(input('J Max = '))]
+    tol_arr = [0,0,float(input('Tolerance (as a decimal ex. 0.0001): '))]
     table_bool = False
 else:
     print('Are you sure you wish to proceed. This will take a while...')
@@ -34,6 +40,7 @@ else:
     else:
         i_max_arr = [int(input('I Max = '))]
         j_max_arr = [int(input('J Max = '))]
+        tol_arr = [0,0,float(input('Tolerance (as a decimal ex. 0.0001): '))]
         table_bool = False
 
 # Init the tables for the report
@@ -49,9 +56,6 @@ yp_upper = lambda x: np.piecewise(x,[x<=2,(x>2)*(x<3),x>=3],[lambda t:0, lambda 
 # Boundary conditions on left and right wall
 x_left = 0
 x_right = 5
-
-# Init tolerance arrays for table in report
-tol_arr = [10**-4,10**-5,10**-6,10**-7,10**-8,10**-9,10**-10,10**-11,10**-12]
 
 # Add fiest columns for both tables
 table1['Tolerance Values'] = tol_arr
@@ -115,20 +119,20 @@ for j_max in j_max_arr:
 
                 # Conditional to catch the tolerance = 10^-6 case
                 if tol == 10**-6:
-                    plot_grid(nx_pts,ny_pts,save_fig=True,filename=filename)
+                    plot_grid(nx_pts,ny_pts,save_fig=True,filename=filename,plot_bool=table_bool)
                     iter2_arr.append(iters1)
 
             print('-----------End saving tolerance comparisons-----------\n')
         else:
 
             # Generate Grid, save iteration time, plot the figure, and save the file (happens in plot_grid function)
-            nx_pts,ny_pts,iters2 = grid_gen.pde_grid(10**-6,False)
+            nx_pts,ny_pts,iters2 = grid_gen.pde_grid(tol_arr[2],False)
             iter2_arr.append(iters2)
 
             delta_t = round(time.time() - start_time,5)
             print(f'Time to complete  = {delta_t} seconds\n')
 
-            plot_grid(nx_pts,ny_pts,save_fig=True,filename=filename)
+            plot_grid(nx_pts,ny_pts,save_fig=True,filename=filename,plot_bool=table_bool)
 
     if table_bool:
         table2[f'Jmax = {j_max}'] = iter2_arr

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 # Create funtion that does plotting and autoscaling for a mesh type array
-def plot_grid(x,y,filename=None,save_fig=False,ax=None,title = None, **kwargs):
+def plot_grid(x,y,filename=None,save_fig=False,ax=None,title = None,plot_bool = True ,**kwargs):
 
     # Pass existing figure or create new one
     ax = ax or plt.gca()
@@ -34,7 +34,10 @@ def plot_grid(x,y,filename=None,save_fig=False,ax=None,title = None, **kwargs):
             plt.savefig(f'{filename}.png')
         else:
             plt.savefig(f'Fig{filename}.png')
-        plt.close()
+        
+        # This line can be confusing, it follows the logic of "table_bool" from main.py. This is done to limit the amount of lines needed to plot the grid if a custom grid is chosen
+        if plot_bool:
+            plt.close()
     
     # Raise error if not fig name or file name is passed
     elif save_fig and filename == None:
