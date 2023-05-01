@@ -31,6 +31,10 @@ class Struct2DEulerChannel():
         self.residuals = None
         self.diss_mat = None
         self.dt_mat = None
+        self.resid1_list = None
+        self.resid2_list = None
+        self.resid3_list = None
+        self.resid4_list = None
 
 
     # Init and calculate cell areas, init cell grid, init cell pressure matrix, and init ghost cells state matrix
@@ -602,7 +606,7 @@ class Struct2DEulerChannel():
 
             count += 1
             print(f'iter {count}')
-            diff -= 0.0001
+            diff -= 0.001
 
             self.max_timestep()
             self.init_fluxes()
@@ -646,7 +650,7 @@ class Struct2DEulerChannel():
             resid3_list.append(resid3_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
             resid4_list.append(resid4_mat[2:self.gc_j_max - 2,2:self.gc_i_max - 2].mean())
             
-            if count % 2000 == 0:
+            if count % 50 == 0:
                 x = self.grid[0]
                 y = self.grid[1]
                 z = self.cell_pressure_mat[2:self.gc_i_max-2,2:self.gc_j_max-2]

@@ -1,6 +1,8 @@
 # Local Imports
+import matplotlib.pyplot as plt
 from plotting_func import plot_grid
 from algebraic_grid import create_alg_grid
+from plotting_func import plot_grid
 from pde_grid import PDE_Grid
 import pickle
 import numpy as np
@@ -49,5 +51,8 @@ print('-----------Begin saving tolerance comparisons-----------\n')
 nx_pts,ny_pts,iters1 = grid_gen.pde_grid(tol,False)
 
 grid = [nx_pts,ny_pts]
-with open('test_grid.pkl','wb') as file:
+with open('grid1_r.pkl','wb') as file:
     pickle.dump(grid,file)
+
+plot_grid(nx_pts,ny_pts)
+plt.show()

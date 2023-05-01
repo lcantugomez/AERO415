@@ -9,11 +9,11 @@ start = time.time()
 # Local imports 
 from struct_2d_euler import Struct2DEulerChannel
 
-with open('grid3.pkl','rb') as file:
+with open('grid1.pkl','rb') as file:
     grid1 = pickle.load(file)
 
 # Inlet conditions
-Mach = 0.7
+Mach = 0.3
 inlet_angle = 0
 rho_inf = 1
 gamma = 1.4
@@ -30,7 +30,7 @@ euler_solver.bcWall()
 euler_solver.bcInletOutlet()
 
 try:
-    euler_solver.runge_kutta(0,0.35,0.07)
+    euler_solver.runge_kutta(0,0.0,0.035)
 except Exception as e:
     print(e)
 

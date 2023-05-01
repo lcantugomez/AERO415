@@ -28,14 +28,9 @@ class PDE_Grid():
 
                 # Calc the alpha beta and gamma vals
                 
-                alpha  = ((1/4)*((self.j_max-1)**2)) * ( ((self.x_mat[i,j+1] - self.x_mat[i,j-1])**2)
-                                                         + ((self.y_mat[i,j+1] - self.y_mat[i,j-1])**2) )
-                
-                beta = ((1/4)*((self.j_max-1)*(self.i_max-1))) * ( ((self.x_mat[i+1,j] - self.x_mat[i-1,j]) * 
-                (self.x_mat[i,j+1] - self.x_mat[i,j-1])) + ((self.y_mat[i+1,j] - self.y_mat[i-1,j]) * (self.y_mat[i,j+1] - self.y_mat[i,j-1])) )
-                
-                gamma = ((1/4)*((self.i_max-1)**2)) * ( ((self.x_mat[i+1,j] - self.x_mat[i-1,j])**2) + 
-                                                       ((self.y_mat[i+1,j] - self.y_mat[i-1,j])**2) )
+                alpha  = ((1/4)*((self.j_max-1)**2)) * ( ((self.x_mat[i,j+1] - self.x_mat[i,j-1])**2) + ((self.y_mat[i,j+1] - self.y_mat[i,j-1])**2) )
+                beta = ((1/4)*((self.j_max-1)*(self.i_max-1))) * ( ((self.x_mat[i+1,j] - self.x_mat[i-1,j]) * (self.x_mat[i,j+1] - self.x_mat[i,j-1])) + ((self.y_mat[i+1,j] - self.y_mat[i-1,j]) * (self.y_mat[i,j+1] - self.y_mat[i,j-1])) )
+                gamma = ((1/4)*((self.i_max-1)**2)) * ( ((self.x_mat[i+1,j] - self.x_mat[i-1,j])**2) + ((self.y_mat[i+1,j] - self.y_mat[i-1,j])**2) )
 
 
 
@@ -74,9 +69,8 @@ class PDE_Grid():
             
             # Updateing figure count per iteration
             fig_count += 1
-            if fig_count % 200 == 0:
+            if fig_count % 100 == 0:
                 print(f'Running... Iteration = {fig_count}')
-
             # Calculate alpha,beta,gamma
             self.coeff_calc()
             for j in range(0,self.j_max):
@@ -107,15 +101,11 @@ class PDE_Grid():
                         self.y_mat[i,j] = self.__class__.y_upper(self.x_mat[i,j])
                         
                     else:
-
-                        # Where nu is alpha/(delta_exi^2) (using original definition to prevent floating point error)
-                        # Where theta is -beta/(2*delta_exi*delta_eta) (using original definition to prevent floating point error)
-                        # Where lambda is gamma/(delta_eta^2) (using original definition to prevent floating point error)
-                        # Where phi is the coefficient of x_ij
-                        nu = self.alpha_mat[i,j]*((self.i_max-1)**2)                    
-                        theta = -self.beta_mat[i,j]*((self.j_max-1)*(self.i_max-1))     
-                        lam = self.gamma_mat[i,j]*((self.j_max-1)**2)                   
-                        phi = 2*(nu + lam)                                              
+                        
+                        nu = self.alpha_mat[i,j]*((self.i_max-1)**2)                    # Where nu is alpha/(delta_exi^2) (using original definition to prevent floating point error)
+                        theta = -self.beta_mat[i,j]*((self.j_max-1)*(self.i_max-1))     # Where theta is -beta/(2*delta_exi*delta_eta) (using original definition to prevent floating point error)
+                        lam = self.gamma_mat[i,j]*((self.j_max-1)**2)                   # Where lambda is gamma/(delta_eta^2) (using original definition to prevent floating point error)
+                        phi = 2*(nu + lam)                                              # Where phi is the coefficient of x_ij 
 
 
                         a1 = theta/phi
@@ -128,11 +118,9 @@ class PDE_Grid():
                         a8 = a1
                         
                         # Calculating points
-                        self.x_mat[i,j] = a1*self.x_mat[i-1,j-1] + a2*self.x_mat[i,j-1] + a3*self.x_mat[i+1,j-1] + a4*self.x_mat[i-1,j]
-                        + a5*self.x_mat[i+1,j] + a6*self.x_mat[i-1,j+1] + a7*self.x_mat[i,j+1] + a8*self.x_mat[i+1,j+1]
+                        self.x_mat[i,j] = a1*self.x_mat[i-1,j-1] + a2*self.x_mat[i,j-1] + a3*self.x_mat[i+1,j-1] + a4*self.x_mat[i-1,j] + a5*self.x_mat[i+1,j] + a6*self.x_mat[i-1,j+1] + a7*self.x_mat[i,j+1] + a8*self.x_mat[i+1,j+1]
 
-                        self.y_mat[i,j] = a1*self.y_mat[i-1,j-1] + a2*self.y_mat[i,j-1] + a3*self.y_mat[i+1,j-1] + a4*self.y_mat[i-1,j]
-                        + a5*self.y_mat[i+1,j] + a6*self.y_mat[i-1,j+1] + a7*self.y_mat[i,j+1] + a8*self.y_mat[i+1,j+1]
+                        self.y_mat[i,j] = a1*self.y_mat[i-1,j-1] + a2*self.y_mat[i,j-1] + a3*self.y_mat[i+1,j-1] + a4*self.y_mat[i-1,j] + a5*self.y_mat[i+1,j] + a6*self.y_mat[i-1,j+1] + a7*self.y_mat[i,j+1] + a8*self.y_mat[i+1,j+1]
             
 
             # Subtracting new iteration from previous iteration and getting absoulte values
