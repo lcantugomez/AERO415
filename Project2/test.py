@@ -7,11 +7,11 @@ import time
 
 
 start = time.time()
-with open('grid2.pkl','rb') as file:
+with open('grid3.pkl','rb') as file:
     grid1 = pickle.load(file)
 
 
-Mach = 0.7
+Mach = 0.3
 inlet_angle = 0
 gamma = 1.4
 rho_inf = 1
@@ -25,7 +25,8 @@ euler_solver = Struct2DEulerChannelMat(grid1,q_inf,gamma,cfl)
 euler_solver.create_cell_matrices()
 euler_solver.bcWall()
 euler_solver.bcInletOutlet()
-euler_solver.runge_kutta(0,0.25,0.05)
+euler_solver.compute_force_bot_bump()
+euler_solver.runge_kutta(0,0,0.035)
 end = time.time()
 
 x = euler_solver.grid[0]
@@ -56,10 +57,10 @@ diff3 = euler_solver.diff3_list
 diff4 = euler_solver.diff4_list
 iters = np.arange(1,len(diff1) + 1,1)
 plt.figure('Residuals')
-plt.plot(iters,diff1,label='Diff1')
-plt.plot(iters,diff2,label='Diff2')
-plt.plot(iters,diff3,label='Diff3')
-plt.plot(iters,diff4,label='Diff4')
+plt.plot(iters,diff1,label='mass')
+plt.plot(iters,diff2,label='x velocity')
+plt.plot(iters,diff3,label='y velocity')
+plt.plot(iters,diff4,label='energy')
 plt.legend()
 
 delta_t = round(end - start,3)

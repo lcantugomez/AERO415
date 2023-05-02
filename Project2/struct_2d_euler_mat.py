@@ -586,9 +586,9 @@ class Struct2DEulerChannelMat():
     
     # Create method for single cell inlet boundary condition
     def inlet_condition(self,j):
-        riem1_minf = self.riem1(0,j)
+        riem1_minf = self.riem1(1,j)
         riem1_2 = riem1_minf
-        p0_2j = self.p0(0,j)
+        p0_2j = self.p0(1,j)
 
         riem2_3 = self.riem2(3,j)
         riem2_2 = riem2_3
@@ -637,7 +637,7 @@ class Struct2DEulerChannelMat():
         q_icmax1_j[3] = rhoE
         return q_icmax1_j
 
-    # Inlet boundary conditions
+    # Inlet and outlet boundary conditions
     def bcInletOutlet(self):
         for j in range(0,self.gc_j_max):
 
@@ -670,7 +670,22 @@ class Struct2DEulerChannelMat():
         
         self.dt_mat = np.copy(dt_mat)
 
+    # Create method for calculating the force on the bump
+    def compute_force_bot_bump(self):
+        dx,dy,ds = self.length('S',with_dx_dy=True)
+        dx_bot = dx[:,0:1]
+        dy_bot = dy[:,0:1]
+        ds_bot = ds[:,0:1]
+        p_bot = self.cell_pressure_mat[2:self.gc_i_max-2,2]
+        force_x = 0
+        force_y = 0
+        for i in range(len(dx_bot)):
+            if abs(dy_bot[i]) > 0:
+                force_x += p_bot[i]*dx_bot[i]
+                force_y += p_bot[i]*dy_bot[i]
 
+        return force_x,force_y
+        
 
 
     def runge_kutta(self,tol,nu2,nu4):
@@ -686,7 +701,7 @@ class Struct2DEulerChannelMat():
 
             count += 1
             print(f'iter {count}')
-            diff -= 0.0001
+            diff -= 1e-5
 
             self.max_timestep()
             self.init_fluxes()
@@ -711,17 +726,25 @@ class Struct2DEulerChannelMat():
                 self.init_residuals()
             
             diff_mat = abs(q_new - qrk_mat)
-            diff1_list.append(np.log(diff_mat[0].mean()))
-            diff2_list.append(np.log(diff_mat[1].mean()))
-            diff3_list.append(np.log(diff_mat[2].mean()))
-            diff4_list.append(np.log(diff_mat[3].mean()))
+            diff1_list.append(np.log(diff_mat[1:,:,0].mean()))
+            diff2_list.append(np.log(diff_mat[1:,:,1].mean()))
+            diff3_list.append(np.log(diff_mat[1:,:,2].mean()))
+            diff4_list.append(np.log(diff_mat[1:,:,3].mean()))
 
-            if count % 100000 == 0:
+            if count % 10000 == 0:
+                print(diff_mat[:,:,0])
+                print(diff_mat[:,:,0].shape)
+                print(diff_mat[0].max())
+                print(diff_mat[0].min())
+                print(diff_mat[0].mean())
                 x = self.grid[0]
                 y = self.grid[1]
                 z = self.cell_pressure_mat[2:self.gc_i_max-2,2:self.gc_j_max-2]
-                print(z)
-                plot_grid(x,y,'hot_r',z)
+                rho = self.ghost_cell_state_vector_mat[2:self.gc_i_max-2,2:self.gc_j_max-2,0]
+                rho_residual = diff_mat[:,:,3]
+                plot_grid(x,y,'hot_r',z,title='Pressure')
+                plot_grid(x,y,'hot_r',rho,title='Density')
+                plot_grid(x,y,'hot_r',rho_residual,title='Density Residuals') 
                 plt.show()
         
         self.bcWall()
