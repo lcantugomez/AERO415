@@ -701,7 +701,7 @@ class Struct2DEulerChannelMat():
 
             count += 1
             print(f'iter {count}')
-            diff -= 1e-2
+            diff -= 1e-5
 
             self.max_timestep()
             self.init_fluxes()
